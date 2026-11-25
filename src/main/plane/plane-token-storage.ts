@@ -27,7 +27,7 @@ const cachedTokens = new Map<string, string>()
 // failing reads without re-touching the keychain on every status poll.
 const credentialErrors = new Map<string, string>()
 const pendingReads = new PendingCredentialReads<string>('Plane')
-const latestWrites = new LatestSecretWrites()
+export const latestWrites = new LatestSecretWrites()
 
 function cacheToken(workspaceId: string, apiKey: string): void {
   if (!cachedTokens.has(workspaceId) && cachedTokens.size >= MAX_INTEGRATION_ACCOUNTS) {
@@ -119,8 +119,9 @@ export async function saveWorkspaceToken(workspaceId: string, apiKey: string): P
   const path = getTokenPath(workspaceId)
   const isLatest = latestWrites.begin(workspaceId)
   const encrypted = await encryptToken(apiKey)
+  // Why: connect's catch then reports not-ok instead of writing a row that has no token.
   if (!isLatest()) {
-    return
+    throw new Error('The connection was removed while its token was being saved.')
   }
   ensureTokenDir()
   writeFileSync(path, encrypted, { mode: 0o600 })

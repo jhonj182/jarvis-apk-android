@@ -18,6 +18,7 @@ const { closeAllConnectionsMock, netFetchMock, resolveProxyMock, setProxyMock } 
 type SafeStorageMockOptions = {
   encryptionAvailable?: boolean
   decryptString?: (value: Buffer) => string
+  encryptString?: (value: string) => Buffer
 }
 
 let tempHome = ''
@@ -85,7 +86,7 @@ async function loadClientModule(options: SafeStorageMockOptions = {}) {
     net: { fetch: netFetchMock },
     safeStorage: {
       isEncryptionAvailable: () => options.encryptionAvailable ?? false,
-      encryptString: (value: string) => Buffer.from(value),
+      encryptString: options.encryptString ?? ((value: string) => Buffer.from(value)),
       decryptString: options.decryptString ?? ((value: Buffer) => value.toString('utf-8'))
     },
     session: {
@@ -174,6 +175,26 @@ describe('connect', () => {
       { id: expectedId, baseUrl: 'https://api.plane.so', workspaceSlug: 'acme' }
     ])
     expect(currentStatus.viewer).toEqual(EXPECTED_VIEWER)
+  })
+
+  it('does not report a connection whose token a disconnect dropped while it encrypted', async () => {
+    const plane = await loadClientModule({
+      encryptionAvailable: true,
+      encryptString: (value) => {
+        plane.disconnect({ workspaceId: expectedWorkspaceId('https://api.plane.so', 'acme') })
+        return Buffer.from(value)
+      }
+    })
+    mockConnectSuccess()
+
+    const result = await plane.connect({
+      baseUrl: 'https://api.plane.so',
+      workspaceSlug: 'acme',
+      apiKey: 'secret-key'
+    })
+
+    expect(result.ok).toBe(false)
+    expect(plane.status().workspaces).toEqual([])
   })
 
   it('returns ok:false on a non-2xx users/me response', async () => {

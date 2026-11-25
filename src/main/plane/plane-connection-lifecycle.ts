@@ -24,6 +24,7 @@ import {
   getWorkspaceFile,
   getWorkspaceFileReadError,
   hasStoredWorkspaceToken,
+  latestTokenWrites,
   setCachedViewer,
   writeWorkspaceFile
 } from './plane-workspace-store'
@@ -65,6 +66,9 @@ export function disconnect(args?: { workspaceId?: string }): void {
   const ids = args?.workspaceId
     ? [args.workspaceId]
     : file.workspaces.map((workspace) => workspace.id)
+  if (!args?.workspaceId) {
+    latestTokenWrites.supersedeAll()
+  }
   for (const id of ids) {
     deleteWorkspaceToken(id)
     deleteCachedViewer(id)

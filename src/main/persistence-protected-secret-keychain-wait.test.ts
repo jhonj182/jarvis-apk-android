@@ -360,15 +360,43 @@ describe('protected secrets at startup when the Keychain prompts', () => {
   it('the quit flush waits for a secret still encrypting', async () => {
     await seedEncryptedProfile()
     useAsyncKeychain(async (ciphertext) => ({ result: decode(ciphertext), shouldReEncrypt: false }))
-    safeStorageMock.encryptStringAsync = async (plaintext: string) =>
-      Buffer.from(`enc:${crypto.randomUUID()}:${plaintext}`, 'utf-8')
+    // Why: a timer-backed encrypt, so a flush that skips the wait writes before the blob exists.
+    safeStorageMock.encryptStringAsync = (plaintext: string) =>
+      new Promise((resolve) =>
+        setTimeout(() => resolve(Buffer.from(`enc:${crypto.randomUUID()}:${plaintext}`)), 1_000)
+      )
 
     const store = await createStore()
     await store.unsealProtectedSecrets()
     store.updateSettings({ opencodeSessionCookie: 'cookie-set-before-quit' })
-    await store.flushAsync()
+    const quit = store.flushAsync()
+    await vi.advanceTimersByTimeAsync(1_500)
+    await quit
 
     expect(decode(Buffer.from(persistedBlobs().cookie, 'base64'))).toBe('cookie-set-before-quit')
+    expect(keychain.syncCalls).toBe(0)
+  })
+
+  it('a quit flush with an encrypt that never settles writes the rest of the state at the bound', async () => {
+    await seedEncryptedProfile()
+    useAsyncKeychain(async (ciphertext) => ({ result: decode(ciphertext), shouldReEncrypt: false }))
+    const store = await createStore()
+    await store.unsealProtectedSecrets()
+    const before = persistedBlobs()
+    safeStorageMock.encryptStringAsync = () => new Promise(() => {})
+    store.updateSettings({ opencodeSessionCookie: 'never-encrypts', httpProxyBypassRules: 'kept' })
+    let settled = false
+    const quit = store.flushAsync().then(() => {
+      settled = true
+    })
+    await vi.advanceTimersByTimeAsync(1_999)
+    expect(settled).toBe(false)
+    await vi.advanceTimersByTimeAsync(2)
+    await quit
+
+    const state = JSON.parse(readFileSync(join(testState.dir, 'orca-data.json'), 'utf-8'))
+    expect(state.settings.httpProxyBypassRules).toBe('kept')
+    expect(persistedBlobs().cookie).toBe(before.cookie)
     expect(keychain.syncCalls).toBe(0)
   })
 })

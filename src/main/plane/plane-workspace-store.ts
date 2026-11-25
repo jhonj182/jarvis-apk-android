@@ -29,7 +29,8 @@ export {
   readWorkspaceToken,
   saveWorkspaceToken,
   deleteWorkspaceToken,
-  getWorkspaceCredentialError
+  getWorkspaceCredentialError,
+  latestWrites as latestTokenWrites
 } from './plane-token-storage'
 
 export type PlaneWorkspaceFile = {

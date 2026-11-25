@@ -232,7 +232,7 @@ describe('a save that awaits the encryptor', () => {
     await vi.waitFor(() => expect(safeStorageMock.encryptStringAsync).toHaveBeenCalled())
     store.deleteWorkspaceToken('ws')
     pending.resolve(Buffer.from('v10:plane-key'))
-    await save
+    await expect(save).rejects.toThrow('removed while its token was being saved')
     expect(store.hasStoredWorkspaceToken('ws')).toBe(false)
   })
 
@@ -275,5 +275,189 @@ describe('a save that awaits the encryptor', () => {
     })
     expect(await store.saveOrcaCloudSession('p', tempHome, session, () => current)).toBeNull()
     expect(existsSync(store.getOrcaCloudSessionPath('p', tempHome))).toBe(false)
+  })
+})
+
+type SecretRace = {
+  save: () => Promise<unknown>
+  remove: () => void
+  stored: () => boolean
+}
+
+const CLOUD_SESSION = {
+  accessToken: 'a0',
+  refreshToken: 'r0',
+  expiresAt: 1,
+  capabilities: { flags: {}, refreshedAt: 1 }
+}
+
+const deleteRaces: [string, () => Promise<SecretRace>][] = [
+  [
+    'Jira token',
+    async () => {
+      const store = await load<typeof SiteCredentialStoreModule>('./jira/site-credential-store')
+      return {
+        save: () => store.saveToken('site', 'k'),
+        remove: () => store.deleteToken('site'),
+        stored: () => store.hasStoredToken('site')
+      }
+    }
+  ],
+  [
+    'Linear token on a disconnect of every workspace',
+    async () => {
+      const store = await load<typeof LinearTokenStoreModule>('./linear/linear-token-store')
+      const paths = await import('./linear/linear-credential-paths')
+      return {
+        save: () => store.saveWorkspaceToken('ws', 'k'),
+        remove: () => store.clearToken(),
+        stored: () => existsSync(paths.getWorkspaceTokenPath('ws'))
+      }
+    }
+  ],
+  [
+    'Bitbucket credential',
+    async () => {
+      const store = await load<typeof CredentialStoreModule>('./bitbucket/credential-store')
+      return {
+        save: () =>
+          store.saveBitbucketCredential({
+            authMode: 'token',
+            email: null,
+            baseUrl: null,
+            account: 'ada',
+            accessToken: 'k',
+            apiToken: null
+          }),
+        remove: () => store.clearStoredBitbucketCredential(),
+        stored: () => store.hasStoredBitbucketCredential()
+      }
+    }
+  ],
+  [
+    'OpenAI speech key',
+    async () => {
+      const store = await load<typeof OpenaiApiKeyStoreModule>('./speech/openai-api-key-store')
+      return {
+        save: () => store.saveOpenAiSpeechApiKey('sk-1'),
+        remove: () => store.clearOpenAiSpeechApiKey(),
+        stored: () => store.hasOpenAiSpeechApiKey()
+      }
+    }
+  ],
+  [
+    'MiniMax cookie',
+    async () => {
+      const store = await load<typeof MinimaxCookieStoreModule>('./minimax/minimax-cookie-store')
+      return {
+        save: () => store.saveMiniMaxSessionCookie('_token=abc'),
+        remove: () => store.clearMiniMaxSessionCookie(),
+        stored: () => store.hasMiniMaxSessionCookie()
+      }
+    }
+  ],
+  [
+    'Orca Cloud session',
+    async () => {
+      const store = await load<typeof ProfileCloudSessionStoreModule>(
+        './orca-profiles/profile-cloud-session-store'
+      )
+      return {
+        save: () => store.saveOrcaCloudSession('p', tempHome, CLOUD_SESSION),
+        remove: () => store.clearOrcaCloudSession('p', tempHome),
+        stored: () => store.readOrcaCloudSession('p', tempHome).status !== 'missing'
+      }
+    }
+  ],
+  [
+    'plugin secret',
+    async () => {
+      const { PluginSecretsStore } = await load<typeof PluginSecretsStoreModule>(
+        './plugins/plugin-secrets-store'
+      )
+      const vault = new PluginSecretsStore(tempHome, 'acme.first')
+      return {
+        save: () => vault.set('k', 'v'),
+        remove: () => vault.delete('k'),
+        stored: () => JSON.stringify(vault.get('k')) !== JSON.stringify({ ok: true, value: null })
+      }
+    }
+  ]
+]
+
+describe('a delete during the encrypt wins', () => {
+  it.each(deleteRaces)('%s', async (_name, setUp) => {
+    const race = await setUp()
+    const pending = deferred<Buffer<ArrayBuffer>>()
+    safeStorageMock.encryptStringAsync.mockImplementationOnce(() => pending.promise)
+    const save = race.save()
+    await vi.waitFor(() => expect(safeStorageMock.encryptStringAsync).toHaveBeenCalled())
+    race.remove()
+    pending.resolve(Buffer.from('v10:late'))
+    // Why: integration token saves reject so connect reports not-ok; the rest resolve.
+    await save.catch(() => undefined)
+    expect(race.stored()).toBe(false)
+  })
+})
+
+describe('a cloud session merge during a refresh save', () => {
+  it('keeps the rotated refresh token and reports both saves', async () => {
+    const store = await load<typeof ProfileCloudSessionStoreModule>(
+      './orca-profiles/profile-cloud-session-store'
+    )
+    expect(await store.saveOrcaCloudSession('p', tempHome, CLOUD_SESSION)).toBe('encrypted')
+    const pending = deferred<Buffer<ArrayBuffer>>()
+    safeStorageMock.encryptStringAsync.mockImplementationOnce(() => pending.promise)
+    const rotated = { ...CLOUD_SESSION, accessToken: 'a1', refreshToken: 'r1' }
+    const refreshSave = store.saveOrcaCloudSession('p', tempHome, rotated)
+    await vi.waitFor(() => expect(safeStorageMock.encryptStringAsync).toHaveBeenCalledTimes(2))
+    // Why: profile-cloud-capability-refresh reads, merges and saves in one turn.
+    const read = store.readOrcaCloudSession('p', tempHome)
+    expect(read.status).toBe('found')
+    const merged = {
+      ...(read.status === 'found' ? read.session : CLOUD_SESSION),
+      capabilities: { flags: { share: true }, refreshedAt: 2 }
+    }
+    const mergeSave = store.saveOrcaCloudSession('p', tempHome, merged)
+    pending.resolve(Buffer.from(`v10:${JSON.stringify(rotated)}`))
+
+    expect(await Promise.all([refreshSave, mergeSave])).toEqual(['encrypted', 'encrypted'])
+    const reloaded = await load<typeof ProfileCloudSessionStoreModule>(
+      './orca-profiles/profile-cloud-session-store'
+    )
+    expect(reloaded.readOrcaCloudSession('p', tempHome)).toMatchObject({
+      status: 'found',
+      session: { refreshToken: 'r1', capabilities: { flags: { share: true } } }
+    })
+  })
+
+  it('a read does not see an in-flight save that went stale', async () => {
+    const store = await load<typeof ProfileCloudSessionStoreModule>(
+      './orca-profiles/profile-cloud-session-store'
+    )
+    const pending = deferred<Buffer<ArrayBuffer>>()
+    safeStorageMock.encryptStringAsync.mockImplementationOnce(() => pending.promise)
+    let current = true
+    const save = store.saveOrcaCloudSession('p', tempHome, CLOUD_SESSION, () => current)
+    await vi.waitFor(() => expect(safeStorageMock.encryptStringAsync).toHaveBeenCalled())
+    expect(store.readOrcaCloudSession('p', tempHome).status).toBe('found')
+    current = false
+    expect(store.readOrcaCloudSession('p', tempHome).status).toBe('missing')
+    pending.resolve(Buffer.from('v10:late'))
+    expect(await save).toBeNull()
+  })
+
+  it('a save superseded by a sign-out reports nothing saved', async () => {
+    const store = await load<typeof ProfileCloudSessionStoreModule>(
+      './orca-profiles/profile-cloud-session-store'
+    )
+    const pending = deferred<Buffer<ArrayBuffer>>()
+    safeStorageMock.encryptStringAsync.mockImplementationOnce(() => pending.promise)
+    const save = store.saveOrcaCloudSession('p', tempHome, CLOUD_SESSION)
+    await vi.waitFor(() => expect(safeStorageMock.encryptStringAsync).toHaveBeenCalled())
+    store.clearOrcaCloudSession('p', tempHome)
+    expect(store.readOrcaCloudSession('p', tempHome).status).toBe('missing')
+    pending.resolve(Buffer.from('v10:late'))
+    expect(await save).toBeNull()
   })
 })

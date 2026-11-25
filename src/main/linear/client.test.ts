@@ -19,6 +19,7 @@ let linearClientMock: ReturnType<typeof vi.fn>
 type SafeStorageMockOptions = {
   encryptionAvailable?: boolean
   decryptString?: (value: Buffer) => string
+  encryptString?: (value: string) => Buffer
 }
 
 function writeLegacyLinearFiles(token: string, viewer: Record<string, unknown>): void {
@@ -94,7 +95,7 @@ async function loadClientModule(options: SafeStorageMockOptions = {}) {
   vi.doMock('electron', () => ({
     safeStorage: {
       isEncryptionAvailable: () => options.encryptionAvailable ?? false,
-      encryptString: (value: string) => Buffer.from(value),
+      encryptString: options.encryptString ?? ((value: string) => Buffer.from(value)),
       decryptString,
       isAsyncEncryptionAvailable: async () => options.encryptionAvailable ?? false,
       decryptStringAsync: async (value: Buffer) => ({
@@ -180,6 +181,19 @@ describe('Linear client workspace storage', () => {
       connected: true,
       workspaces: [{ id: 'org-beta', organizationName: 'Beta' }]
     })
+  })
+
+  it('does not report a connection a disconnect dropped while its token encrypted', async () => {
+    const linear = await loadClientModule({
+      encryptionAvailable: true,
+      encryptString: (value) => {
+        linear.disconnect()
+        return Buffer.from(value)
+      }
+    })
+
+    await expect(linear.connect('token-alpha')).resolves.toMatchObject({ ok: false })
+    expect(linear.getStatus()).toMatchObject({ connected: false, workspaces: [] })
   })
 
   it('reports a legacy single-token workspace without constructing a Linear client', async () => {

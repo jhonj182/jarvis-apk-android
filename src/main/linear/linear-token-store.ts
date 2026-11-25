@@ -41,8 +41,9 @@ const latestWrites = new LatestSecretWrites()
 export async function saveWorkspaceToken(workspaceId: string, apiKey: string): Promise<void> {
   const isLatest = latestWrites.begin(workspaceId)
   const tokenBytes = await encryptCredentialForFile('Linear', apiKey)
+  // Why: connect's catch then reports not-ok instead of writing a row that has no token.
   if (!isLatest()) {
-    return
+    throw new Error('The connection was removed while its token was being saved.')
   }
   ensureOrcaDir()
   if (workspaceId !== LEGACY_WORKSPACE_ID) {

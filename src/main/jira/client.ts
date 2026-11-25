@@ -17,6 +17,7 @@ import {
   deleteToken,
   getSiteFile,
   hasStoredToken,
+  latestWrites as latestTokenWrites,
   readToken,
   saveToken,
   writeSiteFile
@@ -158,6 +159,9 @@ export async function connect(
 export function disconnect(siteId?: string): void {
   const file = getSiteFile()
   const ids = siteId ? [siteId] : file.sites.map((site) => site.id)
+  if (!siteId) {
+    latestTokenWrites.supersedeAll()
+  }
   for (const id of ids) {
     deleteToken(id)
   }

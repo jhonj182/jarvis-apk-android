@@ -23,7 +23,7 @@ let cachedSiteFile: JiraSiteFile | null = null
 let siteFileLoaded = false
 const cachedTokens = new Map<string, string>()
 const pendingReads = new PendingCredentialReads<string>('Jira')
-const latestWrites = new LatestSecretWrites()
+export const latestWrites = new LatestSecretWrites()
 // Why: decrypt failures are recorded per site so getStatus can explain
 // failing reads without re-touching the keychain on every status poll.
 export const credentialErrors = new Map<string, string>()
@@ -193,8 +193,9 @@ export async function readToken(siteId: string): Promise<string | null> {
 export async function saveToken(siteId: string, apiToken: string): Promise<void> {
   const isLatest = latestWrites.begin(siteId)
   const tokenBytes = await encryptCredentialForFile('Jira', apiToken)
+  // Why: connect's catch then reports not-ok instead of writing a row that has no token.
   if (!isLatest()) {
-    return
+    throw new Error('The connection was removed while its token was being saved.')
   }
   ensureOrcaDir()
   ensureTokenDir()

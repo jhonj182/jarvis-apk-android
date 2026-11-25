@@ -2,7 +2,7 @@ import { existsSync, readFileSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { safeStorage } from 'electron'
 import { writeSecureJsonFile } from '../../shared/secure-file'
-import { encryptSecretOffMainThread, LatestSecretWrites } from '../safe-storage-async-encrypt'
+import { encryptSecretOffMainThread } from '../safe-storage-async-encrypt'
 import type {
   OrcaCloudCapabilities,
   OrcaCloudOrgSummary,
@@ -50,8 +50,14 @@ type CachedOrcaCloudSession = {
   persistence: Exclude<OrcaCloudSessionPersistence, 'none'>
 }
 
+type SessionSave = {
+  session: OrcaCloudSession
+  isCurrent: () => boolean
+  result?: Promise<OrcaCloudSessionPersistence | null>
+}
+
 const memorySessions = new Map<string, CachedOrcaCloudSession>()
-const latestWrites = new LatestSecretWrites()
+const latestSaves = new Map<string, SessionSave>()
 
 function sessionCacheKey(profileId: string, userDataPath: string): string {
   return `${userDataPath}\0${profileId}`
@@ -102,19 +108,30 @@ export function getOrcaCloudSessionPath(profileId: string, userDataPath: string)
   return join(getOrcaProfileDirectory(profileId, userDataPath), 'account-session.json.enc')
 }
 
-export async function saveOrcaCloudSession(
+export function saveOrcaCloudSession(
   profileId: string,
   userDataPath: string,
   session: OrcaCloudSession,
   isCurrent: () => boolean = () => true
 ): Promise<OrcaCloudSessionPersistence | null> {
+  const save: SessionSave = { session, isCurrent }
+  latestSaves.set(sessionCacheKey(profileId, userDataPath), save)
+  save.result = writeOrcaCloudSession(profileId, userDataPath, save)
+  return save.result
+}
+
+async function writeOrcaCloudSession(profileId: string, userDataPath: string, save: SessionSave) {
+  const { session, isCurrent } = save
   const cacheKey = sessionCacheKey(profileId, userDataPath)
-  const isLatest = latestWrites.begin(cacheKey)
   const encrypted = await encryptSecretOffMainThread(JSON.stringify(session))
   // Why: checked in the write's own turn, so a refresh captured before sign-out/org-switch
-  // or a save superseded during the encrypt cannot resurrect the session.
-  if (!isLatest() || !isCurrent()) {
+  // cannot resurrect the session.
+  if (!isCurrent()) {
     return null
+  }
+  // Why: readers see an in-flight save, so a later save was built on this one and carries it.
+  if (latestSaves.get(cacheKey) !== save) {
+    return latestSaves.get(cacheKey)?.result ?? null
   }
   if (encrypted) {
     const persisted: PersistedEncryptedSession = {
@@ -177,6 +194,15 @@ export function readOrcaCloudSession(
 ): OrcaCloudSessionReadResult {
   const cacheKey = sessionCacheKey(profileId, userDataPath)
   const memorySession = memorySessions.get(cacheKey)
+  const pending = latestSaves.get(cacheKey)
+  // Why: a read-merge-save during a token refresh's encrypt must merge onto the rotated token.
+  if (pending?.isCurrent()) {
+    return {
+      status: 'found',
+      session: pending.session,
+      persistence: memorySession?.persistence ?? 'memory-only'
+    }
+  }
   if (memorySession) {
     return {
       status: 'found',
@@ -231,7 +257,7 @@ export function readOrcaCloudSession(
 }
 
 export function clearOrcaCloudSession(profileId: string, userDataPath: string): void {
-  latestWrites.supersede(sessionCacheKey(profileId, userDataPath))
+  latestSaves.delete(sessionCacheKey(profileId, userDataPath))
   memorySessions.delete(sessionCacheKey(profileId, userDataPath))
   rmSync(getOrcaCloudSessionPath(profileId, userDataPath), { force: true })
 }

@@ -17,6 +17,7 @@ const { closeAllConnectionsMock, netFetchMock, resolveProxyMock, setProxyMock } 
 type SafeStorageMockOptions = {
   encryptionAvailable?: boolean
   decryptString?: (value: Buffer) => string
+  encryptString?: (value: string) => Buffer
 }
 
 let tempHome = ''
@@ -96,7 +97,7 @@ async function loadClientModule(options: SafeStorageMockOptions = {}) {
     net: { fetch: netFetchMock },
     safeStorage: {
       isEncryptionAvailable: () => options.encryptionAvailable ?? false,
-      encryptString: (value: string) => Buffer.from(value),
+      encryptString: options.encryptString ?? ((value: string) => Buffer.from(value)),
       decryptString,
       isAsyncEncryptionAvailable: async () => options.encryptionAvailable ?? false,
       decryptStringAsync: async (value: Buffer) => ({
@@ -499,6 +500,31 @@ describe('Jira client credential storage', () => {
     )
     const headers = netFetchMock.mock.calls[0]?.[1]?.headers as Headers
     expect(headers.get('Authorization')).toBe('Bearer pat-token')
+  })
+
+  it('does not report a connection a disconnect dropped while its token encrypted', async () => {
+    netFetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify({ accountId: 'acc-1', displayName: 'Ada' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    )
+    const jira = await loadClientModule({
+      encryptionAvailable: true,
+      encryptString: (value) => {
+        jira.disconnect()
+        return Buffer.from(value)
+      }
+    })
+
+    const result = await jira.connect({
+      siteUrl: 'https://acme.atlassian.net',
+      email: 'ada@example.com',
+      apiToken: 'tok'
+    })
+
+    expect(result.ok).toBe(false)
+    expect(jira.getStatus().sites).toEqual([])
   })
 
   it('connects to self-hosted Jira with Basic username/password against REST v2', async () => {
