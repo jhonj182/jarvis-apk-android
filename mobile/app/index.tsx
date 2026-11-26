@@ -5,6 +5,9 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRouter, useFocusEffect } from 'expo-router'
 import { QrCode, ChevronRight, Terminal, ListTodo } from 'lucide-react-native'
 import { ClaudeIcon, OpenAIIcon } from '../src/components/AgentIcons'
+import * as Linking from 'expo-linking'
+import * as Notifications from 'expo-notifications'
+import { consumeJarvisColdStart, shouldLandOnAssistant } from '../src/jarvis/jarvis-entry'
 import {
   type AccountsSnapshot,
   type ProviderKey,
@@ -299,6 +302,23 @@ export default function HomeScreen() {
   // Why: focus can fire repeatedly while an async gate is pending; one probe per
   // mount avoids duplicate storage/permission reads and competing navigation.
   const onboardingOptInCheckedRef = useRef(false)
+
+  // Why a once-per-process flag: only the cold start lands on the assistant (RF-1.2). Coming
+  // back home from it with the "Orca" button, or remounting, must stay here.
+  useEffect(() => {
+    if (!consumeJarvisColdStart()) {
+      return
+    }
+    void Linking.getInitialURL().then((initialUrl) => {
+      const launch = {
+        initialUrl,
+        initialNotificationResponse: Notifications.getLastNotificationResponse()
+      }
+      if (shouldLandOnAssistant(launch)) {
+        router.replace('/jarvis')
+      }
+    })
+  }, [router])
 
   // Why: shared clients from the per-host store, not N independent WebSockets. See docs/mobile-shared-client-per-host.md.
   const hosts = useMemo(() => selectConnectableHostProfiles(hostCatalog), [hostCatalog])
