@@ -1,26 +1,26 @@
 {
   "expo": {
-    "name": "Orca Lab",
-    "slug": "orca-mobile",
-    "version": "0.0.67",
+    "name": "Jarvis",
+    "slug": "jarvis-mobile",
+    "version": "0.1.0",
     "orientation": "default",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/jarvis/icon.png",
     "userInterfaceStyle": "automatic",
-    "scheme": "orca",
+    "scheme": "jarvis",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/jarvis/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#111111"
+      "backgroundColor": "#071019"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.ab2web.orca.mobile",
+      "bundleIdentifier": "dev.jhontamayo.jarvis",
       "buildNumber": "1",
       "infoPlist": {
-        "NSLocalNetworkUsageDescription": "Orca Lab connects to the desktop app on your LAN.",
-        "NSMicrophoneUsageDescription": "Allow Orca Lab to record voice dictation and transcribe it on your paired desktop.",
-        "NSPhotoLibraryUsageDescription": "Allow Orca Lab to attach photos from your library to a terminal session on your paired desktop.",
+        "NSLocalNetworkUsageDescription": "Jarvis se conecta con Orca Lab en tu escritorio por la red local.",
+        "NSMicrophoneUsageDescription": "Permite que Jarvis grabe tu voz para dictar. El audio se envía a tu escritorio emparejado para transcribirlo.",
+        "NSPhotoLibraryUsageDescription": "Permite que Jarvis adjunte fotos de tu biblioteca a una sesión de terminal en tu escritorio emparejado.",
         "NSAppTransportSecurity": {
           "NSAllowsLocalNetworking": true,
           "NSExceptionDomains": {
@@ -68,44 +68,51 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#111111"
+        "foregroundImage": "./assets/jarvis/adaptive-icon.png",
+        "backgroundColor": "#071019"
       },
       "usesCleartextTraffic": true,
       "allowBackup": false,
       "permissions": ["RECORD_AUDIO", "MODIFY_AUDIO_SETTINGS"],
-      "package": "com.ab2web.orca.mobile",
-      "versionCode": 37
+      "package": "dev.jhontamayo.jarvis",
+      "versionCode": 1
     },
     "plugins": [
       "expo-router",
       "./plugins/android-respect-rotation-lock.js",
       "./plugins/android-upload-signing.js",
+      "./plugins/jarvis-android-manifest.js",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/splash-icon.png",
-          "backgroundColor": "#111111"
+          "image": "./assets/jarvis/splash-icon.png",
+          "backgroundColor": "#071019"
         }
       ],
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow Orca Lab to use the camera for QR code scanning.",
-          "microphonePermission": "Allow Orca Lab to use your microphone for voice dictation sent to your paired desktop for transcription.",
+          "cameraPermission": "Permite que Jarvis use la cámara para escanear el código QR de emparejamiento con tu escritorio.",
+          "microphonePermission": "Permite que Jarvis use el micrófono para dictar por voz. El audio se envía a tu escritorio emparejado para transcribirlo.",
           "recordAudioAndroid": false
         }
       ],
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow Orca Lab to attach photos from your library to a terminal session on your paired desktop."
+          "photosPermission": "Permite que Jarvis adjunte fotos de tu biblioteca a una sesión de terminal en tu escritorio emparejado."
         }
       ],
       [
         "expo-local-authentication",
         {
-          "faceIDPermission": "Allow Orca Lab to use Face ID to confirm desktop updates you request from this phone."
+          "faceIDPermission": "Permite que Jarvis use Face ID para desbloquear la app."
+        }
+      ],
+      [
+        "expo-font",
+        {
+          "fonts": ["./assets/fonts/ChakraPetch-SemiBold.ttf"]
         }
       ],
       [

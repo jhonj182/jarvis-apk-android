@@ -17,12 +17,16 @@ export function decodePairingUrl(url: string): PairingOffer | null {
   }
 }
 
+// Why two schemes: the desktop QR still encodes `orca`, and the fork answers deep links on
+// its own as well. Only this side reads a `jarvis` link; the desktop never produces one.
+const PAIRING_URL = /^(?:orca|jarvis):\/\/([^/?#]*)([^?#]*)?/i
+
 // Why: system camera apps hand us the raw custom-scheme URL. Keeping
 // extraction here makes QR scan, paste, and external deep-link flows
 // accept the same URL shapes.
 export function extractPairingCodeFromUrl(url: string): string | null {
   const trimmed = url.trim()
-  const match = /^orca:\/\/([^/?#]*)([^?#]*)?/i.exec(trimmed)
+  const match = PAIRING_URL.exec(trimmed)
   if (!match) {
     return null
   }
@@ -49,16 +53,15 @@ export function extractPairingCodeFromUrl(url: string): string | null {
   return null
 }
 
-// Why: accept either an `orca://pair?...` URL or the bare base64
-// string so the paste-pair flow can take whichever the user actually
-// copied from desktop.
+// Why: accept either a pairing URL (`orca://pair?...` or `jarvis://pair?...`) or the bare
+// base64 string so the paste-pair flow can take whichever the user actually copied from desktop.
 export function parsePairingCode(input: string): PairingOffer | null {
   const trimmed = input.trim()
   if (!trimmed) {
     return null
   }
   try {
-    if (/^orca:\/\//i.test(trimmed)) {
+    if (PAIRING_URL.test(trimmed)) {
       return decodePairingUrl(trimmed)
     }
     return decodePairingBase64(trimmed)
