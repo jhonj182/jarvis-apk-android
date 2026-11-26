@@ -1,3 +1,62 @@
+# Jarvis Mobile (fork de Orca Lab)
+
+Este repositorio es un fork de [`ab2webco/orca-oss`](https://github.com/ab2webco/orca-oss) (Orca Lab,
+licencia MIT). A partir de su app móvil construye **Jarvis Mobile**: una app Android de uso personal,
+con asistente de voz y personaje animado, bloqueo biométrico obligatorio, voz de salida y música de
+YouTube, que razona con sesiones de agente del Orca Lab de escritorio.
+
+Se diferencia del upstream en dos cosas. Todos los cambios viven en `mobile/`, más documentación y
+scripts propios, y la app de escritorio no se modifica. Y `main` es espejo del upstream: el trabajo
+propio se integra en `jarvis/mvp` y entra por ramas `feat/jarvis-*`.
+
+## Cómo construir el APK
+
+En GitHub Actions, porque los equipos del proyecto no tienen herramientas de Android:
+
+```bash
+gh workflow run mobile-android-release.yml --ref <rama> -f publish_github_release=false
+```
+
+Tarda cerca de media hora y deja el artefacto `orca-mobile-android`. Para instalarlo y probarlo en
+el teléfono: [`docs/instalacion-y-prueba.md`](docs/instalacion-y-prueba.md).
+
+## Documentación del fork
+
+| Documento | Qué responde |
+|---|---|
+| [`GOBERNANZA.md`](GOBERNANZA.md) | Quién decide, cómo entra un cambio, cuándo está terminado y cómo se entrega |
+| [`docs/01-prd.md`](docs/01-prd.md) | Qué se construye y por qué |
+| [`docs/02-arquitectura.md`](docs/02-arquitectura.md) | Cómo está pensado |
+| [`docs/03-decisiones/`](docs/03-decisiones/) | Por qué se decidió así: un ADR por decisión |
+| [`docs/personaje/jarvis.md`](docs/personaje/jarvis.md) | Cómo piensa, suena y se ve el personaje |
+| [`docs/instalacion-y-prueba.md`](docs/instalacion-y-prueba.md) | Cómo instalar el APK y probarlo |
+| [`openspec/changes/jarvis-mvp/`](openspec/changes/jarvis-mvp/) | Especificación, diseño y tareas del MVP |
+
+## Clasificación de la información
+
+Hay dos clasificaciones distintas y no se deben confundir:
+
+1. **La del repositorio.** El código del upstream es MIT y el fork es público por naturaleza de fork:
+   GitHub no permite forks privados de repositorios públicos. Por eso **este repositorio no puede
+   contener información confidencial**. Las adiciones propias del fork son código fuente personal de
+   Jhon Tamayo.
+2. **La de la información que el sistema trata**: las conversaciones y los datos de infraestructura
+   del dueño. La firma el propietario del sistema y está **pendiente**. Figura como decisión abierta
+   en [`docs/01-prd.md`](docs/01-prd.md) §10.
+
+## Lo que nunca entra a este repositorio
+
+| Qué nunca entra | Por qué | Control que lo verifica |
+|---|---|---|
+| Tokens de emparejamiento y claves del escritorio | Dan acceso al Orca Lab | Viven en `orca-devices.json` y `orca-e2ee-keypair.json` del escritorio, nunca en git. Escaneo de secretos en `.github/workflows/jarvis-checks.yml`. |
+| Keystores de firma | Permiten firmar apps como el dueño | `*.jks` ignorado en `mobile/.gitignore` y secretos de GitHub Actions. |
+| Datos personales, conversaciones o credenciales del dueño | El repositorio es público | El repositorio solo trae la fuente genérica del personaje (`personaje/jarvis-mobile/`); lo propio del dueño se instala en el escritorio con `scripts/jarvis/install-workspace.sh`. Más el escaneo de secretos. |
+| Contraseñas o API keys | Permitirían suplantar servicios | Escaneo de secretos con gitleaks. |
+
+---
+
+A partir de aquí viene el README del upstream, sin cambios.
+
 <h1 align="center">
   <img src="resources/build/icon.png" alt="Orca Lab" width="64" valign="middle" /> Orca Lab
 </h1>

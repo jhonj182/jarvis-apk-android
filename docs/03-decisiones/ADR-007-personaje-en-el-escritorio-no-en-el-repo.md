@@ -43,5 +43,6 @@ El APK no conoce al personaje: solo abre el espacio de trabajo que el dueño eli
 - Regla dura para quien contribuya: **ningún secreto, token, conversación ni dato personal entra al
   repositorio.** Lo hace cumplir el escaneo de secretos de `.github/workflows/jarvis-checks.yml` y
   lo lista el `README.md`.
-- La clasificación de la información que Jarvis trata queda pendiente de firma del propietario; se
-  registra en la hoja de vida.
+- La clasificación de la información que Jarvis trata no se formaliza en este proyecto (decisión del
+  dueño del 2026-11-25; ver `GOBERNANZA.md`). La regla práctica es la anterior: nada sensible en el
+  repositorio.

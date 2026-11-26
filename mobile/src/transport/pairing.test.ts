@@ -73,3 +73,30 @@ describe('pairing deep links', () => {
     expect(parsePairingCode(code)).toEqual(proxiedOffer)
   })
 })
+
+// Why apart from the cases above: the fork adds the `jarvis` scheme while the
+// desktop QR keeps encoding `orca`; both must open the same confirm screen.
+describe('pairing deep links under the Jarvis scheme', () => {
+  it('extracts the code from a jarvis:// link, from the query or the hash', () => {
+    expect(extractPairingCodeFromUrl('jarvis://pair?code=abc123')).toBe('abc123')
+    expect(extractPairingCodeFromUrl('jarvis://pair#abc123')).toBe('abc123')
+    expect(extractPairingCodeFromUrl('jarvis://pair/?code=abc123')).toBe('abc123')
+  })
+
+  it('accepts scanner casing and surrounding whitespace', () => {
+    expect(extractPairingCodeFromUrl('  JARVIS://PAIR?code=abc123\n')).toBe('abc123')
+  })
+
+  // Why: the paste flow goes through parsePairingCode, not through the deep-link extractor.
+  it('parses a pasted jarvis:// link the same as an orca:// one', () => {
+    const code = encodeOffer()
+
+    expect(parsePairingCode(`jarvis://pair?code=${code}`)).toEqual(offer)
+  })
+
+  it('rejects lookalike routes and other schemes', () => {
+    expect(extractPairingCodeFromUrl('jarvis://pairing?code=abc123')).toBeNull()
+    expect(extractPairingCodeFromUrl('jarvis://pair-extra?code=abc123')).toBeNull()
+    expect(extractPairingCodeFromUrl('other://pair?code=abc123')).toBeNull()
+  })
+})

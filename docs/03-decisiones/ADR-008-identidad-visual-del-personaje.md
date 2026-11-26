@@ -16,9 +16,11 @@ un robot de escritorio cuyo rasgo distintivo son los ojos animados en una pantal
 **El personaje es un par de ojos dentro de un anillo fino.** Los ojos le dan carácter; el anillo
 muestra lo que está haciendo. Un solo elemento memorable, y todo lo demás quieto.
 
-- **Paleta**: azul muy profundo de fondo (`#071019`), ámbar como color del personaje (`#F2B544`),
-  hielo para cuando escucha (`#7FD8F0`), coral para errores (`#FF6B57`), niebla para el texto
-  secundario (`#C9D6E3`). Los tokens viven en `mobile/src/jarvis/jarvis-theme.ts`.
+- **Paleta**: azul muy profundo de fondo (`abyss`, `#071019`), tinta para las superficies (`ink`,
+  `#10243A`), ámbar como color del personaje (`gold`, `#F2B544`), hielo para cuando escucha (`ice`,
+  `#7FD8F0`), coral para errores (`coral`, `#FF6B57`), niebla para el texto secundario (`mist`,
+  `#7C8FA3`) y bruma para el texto principal (`fog`, `#C9D6E3`). Los tokens viven en
+  `mobile/src/jarvis/jarvis-theme.ts`, y una prueba los fija a los valores de `docs/personaje/jarvis.md`.
 - **Tipografía**: Chakra Petch solo para rotulados (nombre, hora, estados) y la fuente del sistema
   para conversación, que es lo que se lee de verdad.
 - **Cinco estados**: reposo (respira, parpadea), escuchando (ojos abiertos, anillo en hielo),

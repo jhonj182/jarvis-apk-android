@@ -7,10 +7,12 @@ export type LocalIntent = { kind: 'music.play'; query: string } | { kind: 'unkno
 
 interface VerbRule {
   phrase: string
-  // Why the split: "toca" or "reproduce" can only mean play, so whatever
-  // follows is what to play. "pon" also means set, put or add ("pon la alarma"),
-  // so what follows must carry a music marker or the text is the agent's job.
+  // Why the split: after "reproduce" or "escucho" comes what to play. "pon" also
+  // means set, put or add ("pon la alarma"), so what follows must carry a music
+  // marker or the text is the agent's job.
   needsMusicMarker: boolean
+  // "toca" also means "one has to": "toca revisar" is a duty, not an order to play.
+  infinitiveIsDuty?: boolean
 }
 
 // Matched against normalized tokens, exact per word. Multi-word phrases must be
@@ -21,8 +23,8 @@ const VERB_RULES: VerbRule[] = [
   { phrase: 'dejame escuchar', needsMusicMarker: false },
   { phrase: 'reproduzca', needsMusicMarker: false },
   { phrase: 'reproduce', needsMusicMarker: false },
-  { phrase: 'tocame', needsMusicMarker: false },
-  { phrase: 'toca', needsMusicMarker: false },
+  { phrase: 'tocame', needsMusicMarker: false, infinitiveIsDuty: true },
+  { phrase: 'toca', needsMusicMarker: false, infinitiveIsDuty: true },
   { phrase: 'metele', needsMusicMarker: false },
   { phrase: 'escucho', needsMusicMarker: false },
   { phrase: 'pongame', needsMusicMarker: true },
@@ -168,6 +170,14 @@ function trimTokens(tokens: Token[]): Token[] {
   return tokens.slice(start, end)
 }
 
+// Why: in Colombian Spanish "toca revisar los PRs" means "one has to review the PRs". With an
+// infinitive right after "toca", only a named genre or the word "música" makes it an order to play.
+const isInfinitive = (norm: string | undefined): boolean =>
+  norm !== undefined && norm.length >= 2 && /[a-zñ]*(ar|er|ir)$/.test(norm)
+
+const namesMusic = (rest: Token[]): boolean =>
+  rest.some((token) => MUSIC_ONLY_NOUNS.has(token.norm) || GENRES.has(token.norm))
+
 function isMusicOrder(rest: Token[], needsMusicMarker: boolean): boolean {
   if (!needsMusicMarker) {
     return true
@@ -200,8 +210,14 @@ export function classifyLocalIntent(text: string): LocalIntent {
     return { kind: 'unknown' }
   }
 
-  const rest = tokens.slice(verb.length)
-  if (!isMusicOrder(rest, verb.rule.needsMusicMarker)) {
+  let rest = tokens.slice(verb.length)
+  if (verb.rule.infinitiveIsDuty && isInfinitive(rest[0]?.norm)) {
+    if (!namesMusic(rest)) {
+      return { kind: 'unknown' }
+    }
+    // The infinitive was the order itself ("toca escuchar salsa"); the genre is what plays.
+    rest = rest.slice(1)
+  } else if (!isMusicOrder(rest, verb.rule.needsMusicMarker)) {
     return { kind: 'unknown' }
   }
   return { kind: 'music.play', query: buildQuery(rest) }

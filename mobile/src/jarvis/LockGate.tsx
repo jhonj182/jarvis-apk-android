@@ -1,9 +1,15 @@
 import type { ReactNode } from 'react'
-import { Pressable, StyleSheet, View } from 'react-native'
+import { Modal, Pressable, StyleSheet, View } from 'react-native'
 import { Text } from '../theme/dynamic-type-text'
-import { MIN_TOUCH_TARGET, colors, radii, spacing, typography } from '../theme/mobile-theme'
+import {
+  JARVIS_MIN_TOUCH_TARGET,
+  jarvisPalette,
+  jarvisSpacing,
+  jarvisTypeSizes
+} from './jarvis-theme'
 import type { LockState } from './lock-policy'
 import { useAppLock } from './use-app-lock'
+import { LockStateProvider } from './use-lock-state'
 
 export interface LockGateProps {
   children: ReactNode
@@ -17,31 +23,37 @@ const HINTS: Record<Exclude<LockState, 'unlocked'>, string> = {
   'locked-disarmed': 'Toca Desbloquear para entrar.'
 }
 
+// Why the Jarvis palette and not the app theme: the lock screen is the character
+// asleep (docs/personaje/jarvis.md §3), and it is the one screen that shows
+// before the owner has proven who they are.
 const styles = StyleSheet.create({
   gate: { flex: 1 },
   content: { flex: 1 },
   cover: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: colors.bgBase,
+    flex: 1,
+    backgroundColor: jarvisPalette.abyss,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: spacing.xl,
-    gap: spacing.lg
+    padding: jarvisSpacing.xl,
+    gap: jarvisSpacing.lg
   },
-  title: { color: colors.textPrimary, fontSize: typography.titleSize, textAlign: 'center' },
-  hint: { color: colors.textSecondary, fontSize: typography.bodySize, textAlign: 'center' },
-  reason: { color: colors.statusAmber, fontSize: typography.bodySize, textAlign: 'center' },
+  title: { color: jarvisPalette.fog, fontSize: jarvisTypeSizes.status, textAlign: 'center' },
+  hint: { color: jarvisPalette.mist, fontSize: jarvisTypeSizes.status, textAlign: 'center' },
+  reason: { color: jarvisPalette.coral, fontSize: jarvisTypeSizes.status, textAlign: 'center' },
   button: {
-    backgroundColor: colors.surfaceBright,
-    borderRadius: radii.button,
-    minHeight: MIN_TOUCH_TARGET,
-    minWidth: MIN_TOUCH_TARGET,
-    paddingHorizontal: spacing.xl,
+    backgroundColor: jarvisPalette.gold,
+    borderRadius: 22,
+    minHeight: JARVIS_MIN_TOUCH_TARGET,
+    minWidth: JARVIS_MIN_TOUCH_TARGET,
+    paddingHorizontal: jarvisSpacing.xl,
     alignItems: 'center',
     justifyContent: 'center'
   },
-  buttonText: { color: colors.bgBase, fontSize: typography.bodySize }
+  buttonText: { color: jarvisPalette.abyss, fontSize: jarvisTypeSizes.status, fontWeight: '600' }
 })
+
+/** Back does nothing while locked: it neither lifts the cover nor reaches the app behind it. */
+function swallowBack(): void {}
 
 // Mandatory app lock (docs/01-prd.md RF-2): everything the app shows sits under
 // this gate. Children stay mounted while locked so navigation state survives;
@@ -49,36 +61,62 @@ const styles = StyleSheet.create({
 export function LockGate({ children, character }: LockGateProps): React.JSX.Element {
   const lock = useAppLock()
   const state = lock.state
+  const locked = state !== 'unlocked'
   return (
-    <View style={styles.gate}>
-      <View
-        style={styles.content}
-        {...(state !== 'unlocked'
-          ? { accessibilityElementsHidden: true, importantForAccessibility: 'no-hide-descendants' }
-          : null)}
-      >
-        {children}
-      </View>
-      {state !== 'unlocked' && (
-        <View style={styles.cover}>
-          {character ?? null}
-          <Text style={styles.title}>Jarvis está bloqueado</Text>
-          <Text style={styles.hint}>{HINTS[state]}</Text>
-          {lock.unavailableReason ? (
-            <Text style={styles.reason}>{lock.unavailableReason}</Text>
-          ) : null}
-          {state === 'locked-disarmed' && (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Desbloquear"
-              onPress={lock.unlock}
-              style={styles.button}
-            >
-              <Text style={styles.buttonText}>Desbloquear</Text>
-            </Pressable>
-          )}
+    <LockStateProvider value={state}>
+      <View style={styles.gate}>
+        <View
+          style={styles.content}
+          {...(locked
+            ? {
+                accessibilityElementsHidden: true,
+                importantForAccessibility: 'no-hide-descendants'
+              }
+            : null)}
+        >
+          {children}
         </View>
+      </View>
+      {/* Why a native Modal and not a View laid over the app: the app's drawers are native
+          modals too, in a window of their own, and no View of ours can cover one. A drawer left
+          open would stay visible and tappable above the lock, and Back would still reach the app. */}
+      {locked && (
+        <Modal
+          visible
+          transparent={false}
+          animationType="none"
+          onRequestClose={swallowBack}
+          supportedOrientations={[
+            'portrait',
+            'portrait-upside-down',
+            'landscape',
+            'landscape-left',
+            'landscape-right'
+          ]}
+        >
+          <View style={styles.cover}>
+            {character ?? null}
+            <Text style={styles.title}>Jarvis está descansando</Text>
+            {lock.unavailableReason ? (
+              <Text style={styles.reason}>{lock.unavailableReason}</Text>
+            ) : (
+              <>
+                <Text style={styles.hint}>{HINTS[state]}</Text>
+                {state === 'locked-disarmed' && (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Desbloquear"
+                    onPress={lock.unlock}
+                    style={styles.button}
+                  >
+                    <Text style={styles.buttonText}>Desbloquear</Text>
+                  </Pressable>
+                )}
+              </>
+            )}
+          </View>
+        </Modal>
       )}
-    </View>
+    </LockStateProvider>
   )
 }

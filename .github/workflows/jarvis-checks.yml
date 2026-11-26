@@ -1,0 +1,62 @@
+name: Jarvis checks
+
+# Controles propios del fork. Los demás workflows de este repositorio son del upstream.
+# Qué exige cada job está en GOBERNANZA.md: «Cómo se especifica un cambio» (puerta) y
+# «Seguridad mínima» (secretos).
+on:
+  push:
+    branches:
+      - 'jarvis/**'
+      - 'feat/jarvis-*'
+  # Los PR del fork van contra jarvis/mvp (GOBERNANZA.md, «Ramas y PRs»); el de main es por si algún día se propone arriba.
+  pull_request:
+    branches:
+      - main
+      - 'jarvis/**'
+
+permissions:
+  contents: read
+
+jobs:
+  spec-gate:
+    name: Puerta de especificación
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          # La puerta compara la rama con origin/main: sin historial no hay con qué comparar.
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      # Sin `pnpm install`: el script solo usa Node.
+      - name: Puerta de especificación
+        run: node scripts/spec-gate.mjs
+
+  secrets:
+    name: Escaneo de secretos
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      # En un pull request la acción lista los commits del PR con la API
+      # (GET /repos/{owner}/{repo}/pulls/{pull_number}/commits). Los comentarios están
+      # apagados más abajo, así que no hace falta permiso de escritura.
+      pull-requests: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          # gitleaks revisa el rango de commits del push con git log: hace falta el historial.
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_COMMENTS: false

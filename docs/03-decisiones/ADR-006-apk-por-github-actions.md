@@ -59,3 +59,19 @@ proyecto, generado una vez.
 - Los agentes de Windows y MacBook contribuyen con código, pruebas y revisión, no con compilación.
 - Se desactivaron en el fork los workflows del upstream que no aplican (compilaciones de escritorio,
   releases, sitios) para que no corran por accidente.
+
+## Enmienda del 2026-11-26: el APK se publica como pre-release
+
+La 0.1.0 pesa 143 MB y el buzón de WhatsApp por el que se entrega admite adjuntos de hasta 64 MB,
+así que no puede ir adjunto. La compilación sigue igual; lo que cambia es la entrega: el APK
+verificado se publica como pre-release del fork (etiqueta `mobile-android-v<versión>`, apuntando al
+commit compilado) y al dueño se le envía el enlace por WhatsApp. No se usa el paso de release del
+workflow, que nombra la etiqueta y el título como si fuera la app de Orca Lab.
+
+Antes de publicarlo se comprueba el firmante del APK contra el almacén del proyecto y se busca en su
+contenido cualquier secreto o dato personal. El repositorio es público, así que el APK queda a la
+vista de cualquiera que tenga el enlace; como la fuente ya es pública y el APK no trae nada que no
+esté en ella, no revela nada nuevo. Se puede borrar con
+`gh release delete mobile-android-v<versión> --cleanup-tag`.
+
+Mientras el APK pese más de 64 MB, la entrega es por enlace. Reducirlo es la tarea T100.

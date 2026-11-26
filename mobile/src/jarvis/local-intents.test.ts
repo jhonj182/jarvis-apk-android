@@ -79,6 +79,30 @@ describe('classifyLocalIntent', () => {
       expect(classifyLocalIntent(text)).toEqual({ kind: 'unknown' })
     })
   })
+
+  // Why: in Colombian Spanish "toca revisar" means "one has to review", as often as "toca salsa"
+  // means "play salsa". Left alone, "toca revisar los PRs" would open YouTube Music instead of
+  // reaching the agent.
+  describe('reads "toca" followed by an infinitive as a duty, unless music is named', () => {
+    it.each([
+      'toca revisar los PRs',
+      'Jarvis, toca revisar el plan de hoy',
+      'tócame escribir el informe',
+      'toca ir al banco',
+      'toca mandar el correo',
+      'toca organizar la reunión con Daniel'
+    ])('%s -> unknown', (text) => {
+      expect(classifyLocalIntent(text)).toEqual({ kind: 'unknown' })
+    })
+
+    it.each([
+      ['toca escuchar salsa', 'salsa'],
+      ['toca poner música de rock', 'rock'],
+      ['toca escuchar un poco de vallenato', 'vallenato']
+    ])('%s -> plays %s', (text, query) => {
+      expect(classifyLocalIntent(text)).toEqual({ kind: 'music.play', query })
+    })
+  })
 })
 
 describe('musicConfirmation', () => {
