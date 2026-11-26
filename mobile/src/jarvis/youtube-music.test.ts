@@ -41,9 +41,7 @@ describe('playYouTubeMusic', () => {
 
     expect(launch).toEqual({ ok: true, via: 'url' })
     expect(mockedSendIntent).not.toHaveBeenCalled()
-    expect(mockedOpenURL).toHaveBeenCalledWith(
-      'https://music.youtube.com/search?q=joe%20arroyo'
-    )
+    expect(mockedOpenURL).toHaveBeenCalledWith('https://music.youtube.com/search?q=joe%20arroyo')
   })
 
   it('falls back to the web search when the intent throws', async () => {
