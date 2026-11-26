@@ -17,8 +17,8 @@ Reglas para todas las tareas:
 
 - [x] T001 (orchestrator) Pasar ORCA-1443 a In Progress y dejar un comentario con las ramas por carril (`feat/jarvis-lock`, `feat/jarvis-music`) y este cambio SDD.
 - [x] T002 (orchestrator) Ejecutar `node scripts/spec-gate.mjs --change jarvis-mvp` desde la raíz: debe pasar, porque `spec.md` y `tasks.md` tienen contenido real y ORCA-1443 aparece en los archivos del cambio.
-- [ ] T003 (orchestrator) Anotar la línea base: correr `pnpm test` en `mobile/` sobre `jarvis/mvp` sin cambios y dejar en un comentario de ORCA-1443 la lista exacta de los 7 archivos de prueba del upstream que fallan.
-- [ ] T004 (orchestrator) Confirmar que `.github/workflows/jarvis-checks.yml` (escaneo de secretos, ADR-007) existe y pasa en la rama; si aún no está en el árbol, crearlo antes de abrir el PR.
+- [x] T003 (orchestrator) Anotar la línea base: correr `pnpm test` en `mobile/` sobre `jarvis/mvp` sin cambios y dejar en un comentario de ORCA-1443 la lista exacta de los 7 archivos de prueba del upstream que fallan. La lista quedó en un comentario de ORCA-1443.
+- [x] T004 (orchestrator) Confirmar que `.github/workflows/jarvis-checks.yml` (escaneo de secretos, ADR-007) existe y pasa en la rama; si aún no está en el árbol, crearlo antes de abrir el PR. Pasó en el PR #3 y en el push de la rama (runs 45770085089 y 45769669032).
 - [x] T005 (orchestrator) Confirmar que el `README.md` trae la cláusula de clasificación y la lista de lo que nunca entra al repositorio, con el control que lo verifica (ADR-007).
 - [x] T006 (orchestrator) Resolver con el dueño, antes de T063, los puntos abiertos del diseño que bloquean código: valores de `slug`, `scheme` y `package`; tipografía Chakra Petch y sus dependencias; política de `versionCode`.
 - [x] T007 (orchestrator) Si la tipografía exige `expo-font` o `expo-asset`, actualizar ADR-003 y `docs/02-arquitectura.md` §4, donde se dice que `expo-speech` es la única dependencia nueva.
@@ -98,10 +98,10 @@ Reglas para todas las tareas:
 
 - [x] T070 (orchestrator) `cd mobile && pnpm test`: comparar los archivos que fallan con la línea base de T003. No puede haber ninguno nuevo.
 - [x] T071 (orchestrator) `pnpm lint`: sin reglas deshabilitadas y sin aumento de `max-lines`.
-- [ ] T072 (orchestrator) `pnpm exec tsc --noEmit` sin errores.
+- [x] T072 (orchestrator) `pnpm exec tsc --noEmit` sin errores. En local queda un error ambiental (tipos de la raíz sin instalar); `pnpm typecheck` pasó en el CI del PR #3.
 - [x] T073 (orchestrator) `pnpm format:check` sin diferencias.
 - [x] T074 (orchestrator) `pnpm exec vitest run src/jarvis/jarvis-dependency-boundaries.test.ts` en verde, y cada prueba de `mobile/src/jarvis/` en verde por separado.
-- [ ] T075 (orchestrator) `node scripts/spec-gate.mjs --change jarvis-mvp` desde la raíz antes de cada commit, y el workflow `mobile.yml` en verde en el PR.
+- [x] T075 (orchestrator) `node scripts/spec-gate.mjs --change jarvis-mvp` desde la raíz antes de cada commit, y el workflow `mobile.yml` en verde en el PR. `mobile.yml` y `jarvis-checks.yml` en verde en el PR #3.
 - [ ] T076 (orchestrator) Verificar la implementación contra cada escenario de `spec.md` con `/sdd-verify`. Los escenarios «a mano en el teléfono» quedan pendientes hasta T087.
 - [ ] T077 (orchestrator) Comentar en ORCA-1443 lo verificado y lo pendiente.
 
