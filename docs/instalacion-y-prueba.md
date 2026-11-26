@@ -18,7 +18,8 @@ Guía para el dueño: del APK a la primera conversación. Está escrita para la 
 
 ## 2. Instalar el APK
 
-1. Abre el APK que llegó por WhatsApp.
+1. Abre el enlace que llegó por WhatsApp y descarga `Jarvis-<versión>.apk`. Pesa unos 143 MB; con
+   WiFi tarda menos.
 2. Android avisa que es de un origen desconocido: permite la instalación para ese origen.
 3. Busca "Jarvis" en el lanzador. Convive con la app de Orca Lab si también la tienes: no la
    reemplaza.

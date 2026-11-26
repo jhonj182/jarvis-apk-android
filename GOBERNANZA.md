@@ -71,12 +71,18 @@ a mano:
 gh workflow run mobile-android-release.yml --ref <rama> -f publish_github_release=false
 ```
 
-Tarda cerca de media hora y deja el artefacto `orca-mobile-android`. La firma es estable: usa los
+Tarda unos veinte minutos y deja el artefacto `orca-mobile-android`. La firma es estable: usa los
 secretos `ANDROID_UPLOAD_KEYSTORE`, `ANDROID_UPLOAD_KEYSTORE_PASSWORD`, `ANDROID_UPLOAD_KEY_ALIAS` y
 `ANDROID_UPLOAD_KEY_PASSWORD` del repositorio. La clave vive en `~/.config/jarvis-mobile/signing/`
 del equipo del dueño y nunca entra al repositorio. Con cada APK entregado suben `version`, en
-`mobile/app.json`, y `versionCode`. La entrega se hace por WhatsApp al dueño, que lo instala con
-`docs/instalacion-y-prueba.md`.
+`mobile/app.json`, y `versionCode`.
+
+La entrega se hace por WhatsApp al dueño, que lo instala con `docs/instalacion-y-prueba.md`. El
+buzón de WhatsApp admite adjuntos de hasta 64 MB y el APK de la 0.1.0 pesa 143 MB, así que hoy no va
+adjunto: se publica como pre-release del fork, con la etiqueta `mobile-android-v<versión>` apuntando
+al commit que se compiló, y se le envía el enlace. Antes de publicarlo se comprueba que el APK va
+firmado con la clave del proyecto y no con la de depuración, y que no trae secretos ni datos
+personales. Hacer que vuelva a caber como adjunto es la tarea T100 de `openspec/`.
 
 ## 8. Seguridad mínima
 

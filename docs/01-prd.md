@@ -197,3 +197,4 @@ Se saben y se aceptan para esta versión; cada una dice cuándo se corrige.
 | La confirmación de música retrasa la música unos dos segundos. | RF-5.3 | Al abrir YouTube Music la app pasa a segundo plano y se calla. Por eso dice la confirmación completa primero y abre después. Con la voz apagada abre de inmediato. | Por decidir después de probar. |
 | Si una respuesta llega en un solo bloque, la voz espera a que termine. | RF-4.2 | La voz lee lo que Claude ya escribió en su historial. Si lo escribe todo de una vez, no hay frase temprana. | F2: leer del flujo en vivo. |
 | Mientras habla, la línea de estado muestra la última frase encolada, no la que está sonando. | RF-4.6 | Cosmético: el texto va unos instantes adelantado a la voz. | F2. |
+| El APK pesa 143 MB y no cabe como adjunto de WhatsApp. | Entrega | El buzón admite adjuntos de hasta 64 MB. La 0.1.0 se publica como pre-release del fork y se envía el enlace. | T100: reducir el APK por debajo de 64 MB. |

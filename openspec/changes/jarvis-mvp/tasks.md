@@ -109,9 +109,9 @@ Reglas para todas las tareas:
 
 - [x] T080 (orchestrator) Generar una vez el almacén de claves propio del proyecto, fuera del repositorio, y configurar en el fork los secretos `ANDROID_UPLOAD_KEYSTORE` (en base64), `ANDROID_UPLOAD_KEYSTORE_PASSWORD`, `ANDROID_UPLOAD_KEY_ALIAS` y `ANDROID_UPLOAD_KEY_PASSWORD`.
 - [x] T081 (orchestrator) Instalar el personaje en el escritorio con `scripts/jarvis/install-workspace.sh` y confirmar que Orca Lab registra el espacio de trabajo.
-- [ ] T082 (orchestrator) Disparar `gh workflow run mobile-android-release.yml --ref <rama> -f publish_github_release=false` sobre la rama integrada; esperar unos 30 minutos y comprobar que el paso «Verify the bundle signer» no avisa firma de depuración.
-- [ ] T083 (orchestrator) Descargar el artefacto `orca-mobile-android` y quedarse con el `.apk`.
-- [ ] T084 (orchestrator) Entregar el APK al dueño por su canal de WhatsApp.
+- [x] T082 (orchestrator) Disparar `gh workflow run mobile-android-release.yml --ref <rama> -f publish_github_release=false` sobre la rama integrada; esperar unos 30 minutos y comprobar que el paso «Verify the bundle signer» no avisa firma de depuración. Run 45770110343 sobre `b26bc28a`: el paso del firmante pasó.
+- [x] T083 (orchestrator) Descargar el artefacto `orca-mobile-android` y quedarse con el `.apk`. Artefacto descargado y verificado: firmado con la clave del proyecto (huella SHA-256 del certificado `d43a4931…5330`), paquete `dev.jhontamayo.jarvis`, versión 0.1.0.
+- [x] T084 (orchestrator) Entregar el APK al dueño por su canal de WhatsApp. Como enlace, no como adjunto: el APK pesa 143 MB y el buzón de WhatsApp admite 64 MB. Publicado en la pre-release `mobile-android-v0.1.0`; enlace enviado por WhatsApp (T100).
 - [ ] T085 (orchestrator) El dueño instala el APK en su teléfono y completa el emparejamiento por Tailscale: «Escanear código» contra el escritorio con Orca Lab abierto.
 - [ ] T086 (orchestrator) El dueño elige el espacio de trabajo de Jarvis en «Ajustes de Jarvis».
 - [ ] T087 (orchestrator) El dueño recorre el flujo de `docs/01-prd.md` §4 de principio a fin y la lista de «solo en el teléfono» de `spec.md`; el resultado se registra en ORCA-1443 (cierre de F1).
@@ -129,3 +129,4 @@ Reglas para todas las tareas:
 - [ ] T097 (orchestrator) F2: en Android, no bloquear con los diálogos que la propia app inicia (permisos, selector de fotos, hoja de compartir). Exige distinguir la pausa en código nativo; hoy se acepta porque ninguna salida deja el candado abierto.
 - [ ] T098 (orchestrator) F2: leer la respuesta del flujo en vivo cuando Claude escribe cada mensaje de una sola vez (RF-4.2).
 - [ ] T099 (orchestrator) F2: decidir la autonomía de Jarvis en el escritorio (permisos del agente) y, si el dueño la amplía, configurarla en el espacio de trabajo.
+- [ ] T100 (orchestrator) Reducir el APK por debajo de 64 MB para que vuelva a ir adjunto por WhatsApp: quitar las arquitecturas de emulador (`x86`, `x86_64`, 53 de los 143 MB) y evaluar el recorte de código. Es decisión del dueño si se deja solo `arm64-v8a`: baja a unos 74 MB y no instala en teléfonos de 32 bits ni en emuladores.
