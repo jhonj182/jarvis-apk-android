@@ -2,7 +2,7 @@ import { createElement } from 'react'
 import { act, create, type ReactTestRenderer } from 'react-test-renderer'
 import type * as LocalAuthentication from 'expo-local-authentication'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { useAppLock } from './use-app-lock'
+import { PROMPT_WATCHDOG_MS, useAppLock } from './use-app-lock'
 
 type AuthResult = LocalAuthentication.LocalAuthenticationResult
 
@@ -181,5 +181,54 @@ describe('useAppLock', () => {
       release?.({ success: true })
     })
     expect(controller?.state).toBe('unlocked')
+  })
+
+  // Why: in `authenticating` there is no button and nothing else moves. A prompt the system never
+  // answers would keep the app sealed until its process is killed.
+  it('gives up on a prompt the system never answers, and a late answer opens nothing', async () => {
+    vi.useFakeTimers()
+    try {
+      let answer: (result: AuthResult) => void = () => undefined
+      mocks.authenticateAsync.mockImplementation(
+        () => new Promise<AuthResult>((resolve) => (answer = resolve))
+      )
+      await mount()
+      expect(controller?.state).toBe('authenticating')
+
+      await act(async () => {
+        vi.advanceTimersByTime(PROMPT_WATCHDOG_MS)
+      })
+
+      expect(controller).toMatchObject({ state: 'locked-disarmed', unavailableReason: null })
+
+      await act(async () => {
+        answer({ success: true } as AuthResult)
+      })
+      expect(controller?.state).toBe('locked-disarmed')
+
+      // The button asks again, and this time the answer counts.
+      mocks.authenticateAsync.mockResolvedValue({ success: true })
+      await act(async () => {
+        controller?.unlock()
+      })
+      expect(mocks.authenticateAsync).toHaveBeenCalledTimes(2)
+      expect(controller?.state).toBe('unlocked')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('does not give up on a prompt that answers in time', async () => {
+    vi.useFakeTimers()
+    try {
+      mocks.authenticateAsync.mockResolvedValue({ success: true })
+      await mount()
+      await act(async () => {
+        vi.advanceTimersByTime(PROMPT_WATCHDOG_MS)
+      })
+      expect(controller?.state).toBe('unlocked')
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })
