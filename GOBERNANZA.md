@@ -54,6 +54,8 @@ Un cambio está terminado cuando cumple todo esto:
 - La tarea de Plane está actualizada.
 - Si el cambio mueve una decisión, su ADR en `docs/03-decisiones/` quedó actualizado.
 - Si toca al dispositivo, está probado en el teléfono.
+- Si entrega un APK, ese APK instala en un emulador de Android con la API 36. Que esté bien firmado
+  y alineado no lo demuestra: quien acepta o rechaza el manifiesto es el instalador de Android.
 
 ## 6. Ramas y PRs
 
@@ -81,8 +83,11 @@ La entrega se hace por WhatsApp al dueño, que lo instala con `docs/instalacion-
 buzón de WhatsApp admite adjuntos de hasta 64 MB y el APK de la 0.1.0 pesa 143 MB, así que hoy no va
 adjunto: se publica como pre-release del fork, con la etiqueta `mobile-android-v<versión>` apuntando
 al commit que se compiló, y se le envía el enlace. Antes de publicarlo se comprueba que el APK va
-firmado con la clave del proyecto y no con la de depuración, y que no trae secretos ni datos
-personales. Hacer que vuelva a caber como adjunto es la tarea T100 de `openspec/`.
+firmado con la clave del proyecto y no con la de depuración, que no trae secretos ni datos
+personales y que instala en un emulador de Android con la API 36. La 0.1.0 pasó las dos primeras
+comprobaciones y Android 15 y 16 la rechazaban con «error al analizar el paquete»: traía un
+`<intent>` dentro de `<queries>` sin acción ni datos. Hacer que vuelva a caber como adjunto es la
+tarea T100 de `openspec/`.
 
 ## 8. Seguridad mínima
 

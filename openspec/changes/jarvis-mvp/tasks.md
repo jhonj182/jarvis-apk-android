@@ -47,6 +47,7 @@ Reglas para todas las tareas:
 - [x] T026 (windows-agent) Validar en la rama: `pnpm test`, `pnpm lint`, `pnpm exec tsc --noEmit` y `pnpm format:check`, sin editar `app.json` ni `package.json`.
 - [x] T027 (windows-agent) Abrir el PR de `feat/jarvis-music` contra `jarvis/mvp` y cerrar con el bloque `=== REPORTE FINAL ===`.
 - [x] T028 (orchestrator) Revisar y fusionar el PR de `feat/jarvis-music` en `jarvis/mvp`.
+- [x] T029 (orchestrator) Corregir los dos `<intent>` que el plugin pone en `<queries>`: la acción va en un hijo `<action>`, no en un atributo del `<intent>`. La 0.1.0 no instalaba en Android 15 ni en 16 (`INSTALL_PARSE_FAILED_MANIFEST_MALFORMED`, «intent tags must contain either an action or data», línea 34 del manifiesto). T024 codificaba la forma equivocada; la prueba nueva falló contra el plugin anterior y pasa con el arreglo.
 
 ## 4. Voz de salida
 
@@ -116,6 +117,7 @@ Reglas para todas las tareas:
 - [ ] T086 (orchestrator) El dueño elige el espacio de trabajo de Jarvis en «Ajustes de Jarvis».
 - [ ] T087 (orchestrator) El dueño recorre el flujo de `docs/01-prd.md` §4 de principio a fin y la lista de «solo en el teléfono» de `spec.md`; el resultado se registra en ORCA-1443 (cierre de F1).
 - [ ] T088 (orchestrator) Archivar el cambio con `/sdd-archive` y pasar ORCA-1443 a Done.
+- [ ] T089 (orchestrator) Construir la 0.1.1 (`versionCode` 2) con T029, instalarla en un emulador con la API 36 y publicarla; entregar el enlace en reemplazo de la 0.1.0, que no instala.
 
 ## 10. Post-MVP
 

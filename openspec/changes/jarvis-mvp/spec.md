@@ -436,6 +436,16 @@ Las frases de la app, que no son las del agente, MUST decirse tal como están es
 - **Cuando** Expo resuelve el manifiesto de Android (`expo config --type introspect`)
 - **Entonces** `<queries>` declara el intent `android.media.action.MEDIA_PLAY_FROM_SEARCH` y el intent `VIEW` de `https://music.youtube.com`, sin duplicarse
 
+#### Scenario: Cada intent de `<queries>` declara su acción en un hijo `<action>`
+- **Dado** el manifiesto de Android que deja el plugin
+- **Cuando** se lee cada `<intent>` que el plugin agregó dentro de `<queries>`
+- **Entonces** ninguno lleva atributos propios y cada uno trae un hijo `<action>` con su nombre; Android 15 y 16 se niegan a instalar el APK cuando uno de ellos no tiene acción ni datos
+
+#### Scenario: El APK instala en Android 16
+- **Dado** el APK de una versión entregada
+- **Cuando** se instala en un emulador con la API 36
+- **Entonces** Android lo instala sin «error al analizar el paquete»
+
 ### Requirement: Sin YouTube Music, el navegador (RF-5.2)
 
 Si YouTube Music no está instalado, la app MUST abrir la búsqueda en el navegador.

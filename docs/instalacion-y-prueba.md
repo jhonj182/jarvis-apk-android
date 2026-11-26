@@ -3,7 +3,10 @@
 **Última actualización:** 2026-11-26
 
 Guía para el dueño: del APK a la primera conversación. Está escrita para la versión del MVP
-(`0.1.0`); si algo no coincide con lo que ves, dilo y se corrige este documento junto con la app.
+(`0.1.1`); si algo no coincide con lo que ves, dilo y se corrige este documento junto con la app.
+
+La 0.1.0 no instala en teléfonos con Android 15 o 16: Android la rechaza con «Se produjo un problema
+al analizar el paquete». Usa la 0.1.1 o una posterior.
 
 ---
 
@@ -97,6 +100,7 @@ En este orden. Cada fila es un criterio del PRD.
 
 | Síntoma | Causa probable | Qué hacer |
 |---|---|---|
+| «Se produjo un problema al analizar el paquete» al instalar | Es la 0.1.0 en un teléfono con Android 15 o 16: traía una declaración de paquetes que esas versiones no aceptan | Instala la 0.1.1 o una posterior, con el enlace nuevo. |
 | "No encuentro el escritorio" | Orca Lab cerrado, o Tailscale apagado en el teléfono o el escritorio | Revisa los dos y vuelve a entrar. |
 | El dictado no arranca | El dictado no está activo en el escritorio | Actívalo desde Ajustes de Jarvis. |
 | Suena en inglés o con voz robótica | El teléfono no tiene voz en español | Instala una desde los ajustes de accesibilidad. |
