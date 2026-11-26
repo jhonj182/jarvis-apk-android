@@ -117,7 +117,7 @@ Reglas para todas las tareas:
 - [ ] T086 (orchestrator) El dueño elige el espacio de trabajo de Jarvis en «Ajustes de Jarvis».
 - [ ] T087 (orchestrator) El dueño recorre el flujo de `docs/01-prd.md` §4 de principio a fin y la lista de «solo en el teléfono» de `spec.md`; el resultado se registra en ORCA-1443 (cierre de F1).
 - [ ] T088 (orchestrator) Archivar el cambio con `/sdd-archive` y pasar ORCA-1443 a Done.
-- [ ] T089 (orchestrator) Construir la 0.1.1 (`versionCode` 2) con T029, instalarla en un emulador con la API 36 y publicarla; entregar el enlace en reemplazo de la 0.1.0, que no instala.
+- [x] T089 (orchestrator) Construir la 0.1.1 (`versionCode` 2) con T029, instalarla en un emulador con la API 36 y publicarla; entregar el enlace en reemplazo de la 0.1.0, que no instala. Run 45868259762 sobre `8ca86138a` (el primer intento falló por un 429 de Maven Central antes de compilar). Instalada en el emulador de API 36 con la firma del proyecto; el candado pasó ahí los pasos 1 a 3 de la guía. Publicada como pre-release `mobile-android-v0.1.1` con `Jarvis-0.1.1.apk` y su `.sha256`; la 0.1.0 quedó marcada como inutilizable y el enlace se envió por WhatsApp.
 
 ## 10. Post-MVP
 
