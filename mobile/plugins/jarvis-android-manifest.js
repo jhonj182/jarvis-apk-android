@@ -21,6 +21,24 @@ function intentName(intent) {
   return intent.$ && intent.$['android:name']
 }
 
+// Why action and data together: other plugins declare a VIEW intent for the
+// whole of https. Judged by its action alone that one passes for ours, and the
+// music intent, the one package visibility needs, would be skipped.
+function intentKey(intent) {
+  const declared = intent.data === undefined ? [] : [].concat(intent.data)
+  const data = declared
+    .map((entry) => entry && entry.$)
+    .filter(Boolean)
+    .map((attrs) =>
+      Object.keys(attrs)
+        .sort()
+        .map((name) => `${name}=${attrs[name]}`)
+        .join(',')
+    )
+    .sort()
+  return `${intentName(intent)}|${data.join(';')}`
+}
+
 module.exports = function withJarvisAndroidManifest(config) {
   return withAndroidManifest(config, (cfg) => {
     const manifest = cfg.modResults.manifest
@@ -39,9 +57,9 @@ module.exports = function withJarvisAndroidManifest(config) {
       queries.intent = []
     }
 
-    const declared = new Set(queries.intent.map((intent) => intentName(intent)))
+    const declared = new Set(queries.intent.map((intent) => intentKey(intent)))
     for (const intent of JARVIS_INTENTS) {
-      if (!declared.has(intentName(intent))) {
+      if (!declared.has(intentKey(intent))) {
         queries.intent.push(intent)
       }
     }

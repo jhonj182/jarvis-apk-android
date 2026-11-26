@@ -78,4 +78,18 @@ describe('withJarvisAndroidManifest', () => {
     expect(results.manifest.queries).toHaveLength(1)
     expect(results.manifest.queries).toEqual([{ intent: expectedIntents() }])
   })
+
+  // Why: Expo's own plugins declare a VIEW intent for every https link. Judged by its action
+  // alone that one passes for ours, and the music intent, the one visibility needs, is skipped.
+  it('still adds its music intent next to a generic https VIEW intent another plugin declared', async () => {
+    const generic: ManifestNode = {
+      $: { 'android:name': 'android.intent.action.VIEW' },
+      category: [{ $: { 'android:name': 'android.intent.category.BROWSABLE' } }],
+      data: [{ $: { 'android:scheme': 'https' } }]
+    }
+
+    const results = await run({ manifest: { queries: [{ intent: [generic] }] } })
+
+    expect(results.manifest.queries?.[0].intent).toEqual([generic, ...expectedIntents()])
+  })
 })

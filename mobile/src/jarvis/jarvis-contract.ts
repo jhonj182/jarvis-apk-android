@@ -20,11 +20,21 @@ export interface JarvisMessage {
 export type JarvisSetupNeed = 'pair-desktop' | 'choose-workspace' | 'dictation-off' | null
 
 /**
- * Resolves an order on the phone, without the agent. Returns the sentence to
- * speak aloud when it handled the text, or null to send the text to the agent.
+ * The voice an order may use before it runs. Opening another app sends this one to the
+ * background, where the voice falls silent, so whatever must be heard is said first.
+ */
+export interface JarvisOrderVoice {
+  /** Reads the sentence and resolves once it was read, or once it could not be read. */
+  say: (text: string) => Promise<void>
+}
+
+/**
+ * Resolves an order on the phone, without the agent. Returns the sentence to show when it
+ * handled the text, or null to send the text to the agent. What must be heard is said through
+ * `voice`, when one is given; with none, the order runs in silence.
  */
 export interface JarvisLocalIntentHandler {
-  handle: (text: string) => Promise<string | null>
+  handle: (text: string, voice?: JarvisOrderVoice) => Promise<string | null>
 }
 
 export interface JarvisConversation {
