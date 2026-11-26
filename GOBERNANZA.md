@@ -92,15 +92,16 @@ El repositorio es público y no guarda nada sensible.
 El personaje se instala en el escritorio con `scripts/jarvis/install-workspace.sh`: el APK no lo
 conoce. El bloqueo biométrico va siempre activo, sin periodo de gracia (ADR-005).
 
-**Riesgos heredados del upstream que se conocen hoy** (de `docs/02-arquitectura.md` §6):
+**Riesgos y limitaciones heredados del upstream que se conocen hoy** (`docs/02-arquitectura.md` §6,
+ADR-005 y `docs/01-prd.md` §11):
 
 | Riesgo | Evidencia |
 |---|---|
 | Una vez emparejado, el servidor del escritorio escucha en todas las interfaces y no filtra por IP. | `src/main/runtime/runtime-rpc.ts:1588-1592` |
-| Los tokens de dispositivo del escritorio quedan en un archivo de texto sin cifrar. | `src/main/runtime/device-registry.ts:60,81`, `src/shared/secure-file.ts:91-93` |
+| Los tokens de dispositivo del escritorio quedan en un archivo JSON sin cifrar. Solo los protegen los permisos restringidos con los que se escribe ese archivo. | `src/main/runtime/device-registry.ts:60,81`, `src/shared/secure-file.ts:91-93` |
 | El socket va sin TLS. Lo compensa el cifrado de punta a punta dentro de la app. | `mobile/app.json` (`usesCleartextTraffic: true`), `mobile/src/transport/e2ee.ts:1-4` |
 | La vista previa de «apps recientes» puede mostrar lo último que se vio antes de bloquear. | `docs/01-prd.md` §11, ADR-005 |
-| El emparejamiento no sobrevive un reinicio del teléfono hasta el primer desbloqueo: toca volver a emparejar. | `mobile/src/transport/pairing-keychain.ts:5-8`, ADR-005 |
+| Tras reiniciar el teléfono, hasta el primer desbloqueo la app no puede leer el token de emparejamiento y no conecta con el escritorio. No hay que emparejar de nuevo. | `mobile/src/transport/pairing-keychain.ts:5-8` |
 
 Para el primero, la mitigación operativa del MVP es usar la tailnet y no la red local abierta.
 
@@ -117,10 +118,16 @@ git fetch upstream
 git merge upstream/main   # sobre main
 ```
 
-De ahí el avance pasa a `jarvis/mvp`. Estos son los archivos del upstream que el fork edita, y por
-tanto los que pueden dar conflicto: `mobile/app/_layout.tsx`, `mobile/app/index.tsx`,
-`mobile/app.json`, `mobile/package.json`, `mobile/pnpm-lock.yaml`, `mobile/src/transport/pairing.ts`
-y su prueba, `mobile/src/store-release-identity.test.ts`, `.gitignore` y `README.md`.
+De ahí el avance pasa a `jarvis/mvp`. Nada del fork entra por PR a `main`: esa rama solo recibe
+el upstream, y el trabajo del fork se revisa en los PR hacia `jarvis/mvp`.
+
+Estos son los archivos del upstream que el fork edita, y por tanto los que pueden dar conflicto:
+`mobile/app/_layout.tsx`, `mobile/app/index.tsx`, `mobile/app.json`, `mobile/package.json`,
+`mobile/pnpm-lock.yaml`, `mobile/src/transport/pairing.ts` y su prueba,
+`mobile/src/store-release-identity.test.ts`, `.gitignore` y `README.md`. También
+`.github/scripts/check-root-directory-entries.mjs` y su prueba: su guardia de la raíz admite
+cuatro entradas propias (`GOBERNANZA.md`, `openspec/`, `personaje/` y `scripts/`) y sigue
+bloqueando cualquier otra.
 
 ## 11. Qué se excluyó a propósito
 

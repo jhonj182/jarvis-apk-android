@@ -25,6 +25,12 @@ function checkRootDirectoryEntries(argv) {
   baseEntries.add('site')
   // Why: Claude Code reads the project's MCP servers only from a root .mcp.json.
   baseEntries.add('.mcp.json')
+  // Why: the Jarvis fork keeps its governance, spec, character source and scripts at the root
+  // (GOBERNANZA.md, «Sincronía con el upstream»); anything else still has to go under an existing directory.
+  const forkRootEntries = ['GOBERNANZA.md', 'openspec', 'personaje', 'scripts']
+  for (const forkRootEntry of forkRootEntries) {
+    baseEntries.add(forkRootEntry)
+  }
   const blockedEntries = readRootEntries(headSha).filter((entry) => !baseEntries.has(entry))
 
   if (blockedEntries.length === 0) {

@@ -58,7 +58,9 @@ function git(...argumentos) {
 
 /** Rutas separadas por NUL: un nombre con espacios o tildes no se parte en dos. */
 function rutas(...argumentos) {
-  return git(...argumentos).split('\0').filter(Boolean)
+  return git(...argumentos)
+    .split('\0')
+    .filter(Boolean)
 }
 
 function opcion(nombre) {
@@ -234,7 +236,9 @@ function main() {
 
   const codigo = archivos.filter(esCodigo)
   if (codigo.length === 0) {
-    console.log(`Puerta de especificación: el cambio no toca código bajo ${DIRECTORIO_CODIGO}. Pasa.`)
+    console.log(
+      `Puerta de especificación: el cambio no toca código bajo ${DIRECTORIO_CODIGO}. Pasa.`
+    )
     return 0
   }
 

@@ -7,10 +7,12 @@ on:
   push:
     branches:
       - 'jarvis/**'
-      - 'feat/jarvis/**'
+      - 'feat/jarvis-*'
+  # Los PR del fork van contra jarvis/mvp (GOBERNANZA.md, «Ramas y PRs»); el de main es por si algún día se propone arriba.
   pull_request:
     branches:
       - main
+      - 'jarvis/**'
 
 permissions:
   contents: read

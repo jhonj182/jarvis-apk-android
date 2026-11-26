@@ -122,6 +122,38 @@ describe('root directory guard', () => {
     expect(output).not.toContain('.mcp.json')
   })
 
+  // Why: the Jarvis fork keeps its governance, spec, character source and scripts at the root
+  // (GOBERNANZA.md), so a PR that adds one of them must not turn the whole verify gate red.
+  it('allows the fork root entries', () => {
+    const fixture = makeFixture()
+    const head = commitFiles(fixture.root, [
+      ['GOBERNANZA.md', 'governance\n'],
+      ['openspec/changes/jarvis-mvp/spec.md', 'spec\n'],
+      ['personaje/jarvis-mobile/AGENTS.md', 'character\n'],
+      ['scripts/spec-gate.mjs', 'gate\n']
+    ])
+
+    const result = runGuard({ ...fixture, head })
+
+    expect(result.status).toBe(0)
+    expect(result.stdout).toContain('no new root-level files or folders')
+  })
+
+  it('allows the fork root entries but still blocks any other new root file', () => {
+    const fixture = makeFixture()
+    const head = commitFiles(fixture.root, [
+      ['openspec/changes/jarvis-mvp/spec.md', 'spec\n'],
+      ['.other-root.json', '{}\n']
+    ])
+
+    const result = runGuard({ ...fixture, head })
+    const output = `${result.stdout}\n${result.stderr}`
+
+    expect(result.status).toBe(1)
+    expect(output).toContain('.other-root.json')
+    expect(output).not.toContain('openspec')
+  })
+
   it('blocks a new root .ignore file now that no tool reads it', () => {
     const fixture = makeFixture()
     const head = commitFiles(fixture.root, [['.ignore', '*.log\n']])

@@ -13,7 +13,9 @@ import { fileURLToPath } from 'node:url'
 const PUERTA = fileURLToPath(new URL('./spec-gate.mjs', import.meta.url))
 
 // Más de 200 caracteres de contenido: por debajo, la puerta ve un marcador de posición.
-const RELLENO = 'Requisito con escenarios dados, cuando y entonces, cada uno verificable. '.repeat(6)
+const RELLENO = 'Requisito con escenarios dados, cuando y entonces, cada uno verificable. '.repeat(
+  6
+)
 const SPEC = `# Spec\n\n## Requisitos\n\n${RELLENO}\n`
 const TAREAS = `# Tareas\n\n- [ ] Implementar\n- [ ] Probar\n\n${RELLENO}\n`
 
@@ -216,7 +218,10 @@ test('un cambio archivado no respalda código nuevo', (t) => {
   const repo = repositorio()
   t.after(sinRepositorio(repo))
   codigo(repo)
-  cambio(repo, 'archive/2026-01-01-viejo', { 'spec.md': SPEC, 'tasks.md': `${TAREAS}\nTarea ORCA-5.\n` })
+  cambio(repo, 'archive/2026-01-01-viejo', {
+    'spec.md': SPEC,
+    'tasks.md': `${TAREAS}\nTarea ORCA-5.\n`
+  })
   commit(repo, 'feat(jarvis): ejemplo')
 
   const r = correr(repo, '--base', 'main')
