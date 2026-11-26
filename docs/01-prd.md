@@ -133,7 +133,6 @@ flowchart TD
 | YouTube Music instalado y con sesión iniciada en el teléfono | pendiente de verificar en el teléfono | Lo confirma el dueño al probar. |
 | GitHub Actions habilitado en el fork | disponible | Se habilitó en esta sesión. |
 | Herramientas de construcción Android en los PCs de Windows y MacBook | no disponible | Ninguno tiene JDK ni SDK Android; el APK se construye en GitHub Actions. |
-| Consecutivo `SIS-XXX` confirmado por el SIG | pendiente | Queda provisional; ver hoja de vida. |
 
 ## 7. Fuera de alcance
 
@@ -172,11 +171,29 @@ Medidas sobre el teléfono del dueño, durante la primera semana de uso:
 
 | Pregunta | Quién decide | Desde | Qué bloquea |
 |---|---|---|---|
+| ¿Jarvis se mantiene como app separada o se vuelve un modo de la app de Orca Lab? | Jhon Tamayo | 2026-11-25 | Nada; el MVP avanza como app separada (ADR-001). |
 | ¿Qué cuenta de IA usa Jarvis por defecto: la suscripción de Claude o el endpoint de z.ai? | Jhon Tamayo | 2026-11-25 | Nada en el MVP; se usa la cuenta seleccionada en el escritorio. |
 | ¿Se quiere un periodo de gracia corto (por ejemplo 15 segundos) al volver del segundo plano? | Jhon Tamayo | 2026-11-25 | Nada; el MVP no tiene gracia, como se pidió. |
 | ¿Se bloquean las capturas de pantalla y la vista previa de apps recientes? | Jhon Tamayo | 2026-11-25 | Una línea de código nativo; hoy la vista previa de apps recientes puede mostrar lo último que se vio. |
 | ¿El timbre de voz del personaje es la voz del sistema o una voz de nube? | Jhon Tamayo | 2026-11-25 | Fase F3. |
 | ¿Se ofrece el bloqueo de app como mejora al upstream de Orca Lab? | Jhon Tamayo | 2026-11-25 | Nada. |
-| ¿Cuál es la clasificación de la información que el sistema trata? | Propietario del sistema | 2026-11-25 | P1 de la hoja de vida. |
-| ¿Cuál es el consecutivo `SIS-XXX`? | SIG de Cuántico | 2026-11-25 | Libro oficial `FOR-TEC-04`. |
 | ¿YouTube Music está instalado y con sesión en el teléfono? | Jhon Tamayo | 2026-11-25 | Prueba de RF-5.1 en el teléfono. |
+| ¿Cuánta autonomía tiene Jarvis en el escritorio: pide permiso por cada herramienta o trabaja con un modo de confianza? | Jhon Tamayo | 2026-11-26 | Nada en el MVP. Hoy cada permiso se aprueba en Orca Lab y el teléfono solo avisa. |
+| ¿Se mantiene la confirmación extra (el botón "Confirmar") después de leer la huella? | Jhon Tamayo | 2026-11-26 | Nada; es una línea. Sin ella, la huella sola alcanza para entrar. |
+
+## 11. Limitaciones conocidas del MVP
+
+Se saben y se aceptan para esta versión; cada una dice cuándo se corrige.
+
+| Limitación | Afecta a | Qué pasa | Cuándo se corrige |
+|---|---|---|---|
+| La app no distingue YouTube Music de un navegador. | RF-5.2 | Sin YouTube Music instalado, anuncia la orden y no abre nada. | F2: apuntar la orden al paquete de YouTube Music. |
+| Nada se probó en un teléfono antes de entregar. | RF-3, RF-4, RF-5 | Los equipos del proyecto no tienen SDK Android; la lógica está probada con pruebas unitarias. | F4: el dueño valida en su teléfono con `docs/instalacion-y-prueba.md`. |
+| Las pantallas de Orca Lab siguen en inglés y con su marca. | RF-3.6 | Solo la pantalla del asistente, sus ajustes y el bloqueo están en español y con la identidad de Jarvis. | Por decidir después de probar. |
+| La vista previa de "apps recientes" puede mostrar lo último que se vio. | RF-2.1 | La app bloquea el contenido, pero Android guarda una imagen estática al mandarla al segundo plano. | Decisión abierta en §10. |
+| En Android, cada diálogo del sistema bloquea la app. | RF-2.2 | Android no distingue perder el foco de irse a segundo plano: el diálogo de un permiso (el del micrófono, la primera vez), el selector de fotos o la hoja de compartir cuentan como irse, y Jarvis pide la huella al volver. A cambio, ninguna salida deja el candado abierto. | F2: distinguir en código nativo las salidas que la propia app inicia. |
+| Al emparejar desde Jarvis, la app lleva al inicio de Orca Lab. | RF-3.4 | Las pantallas de emparejamiento son las de Orca Lab y terminan allá. Con Atrás se vuelve a Jarvis, que ya tiene el escritorio. | F2: volver directo al asistente. |
+| Jarvis no aprueba permisos de Claude desde el teléfono. | RF-3.4 | Cuando Claude pide permiso para una herramienta, Jarvis avisa «Espero tu permiso en Orca Lab» y no envía nada hasta que se apruebe en el escritorio. | Decisión abierta en §10: cuánta autonomía tiene Jarvis. |
+| La confirmación de música retrasa la música unos dos segundos. | RF-5.3 | Al abrir YouTube Music la app pasa a segundo plano y se calla. Por eso dice la confirmación completa primero y abre después. Con la voz apagada abre de inmediato. | Por decidir después de probar. |
+| Si una respuesta llega en un solo bloque, la voz espera a que termine. | RF-4.2 | La voz lee lo que Claude ya escribió en su historial. Si lo escribe todo de una vez, no hay frase temprana. | F2: leer del flujo en vivo. |
+| Mientras habla, la línea de estado muestra la última frase encolada, no la que está sonando. | RF-4.6 | Cosmético: el texto va unos instantes adelantado a la voz. | F2. |

@@ -22,7 +22,9 @@ completa de la transcripción entra a la cola en cuanto llega, sin esperar el fi
 Antes de leer, el texto se limpia con un función pura (`mobile/src/jarvis/speech-text.ts`) que
 quita código, símbolos de formato y rutas, y recorta a ocho frases.
 
-`expo-speech` es la única dependencia nueva del fork.
+`expo-speech` es el único **módulo nuevo** del fork. (`expo-font` también pasa a declararse como
+dependencia directa, pero solo para que su plugin de configuración sea resolvable: ya venía compilado
+por otras dependencias. Ver ADR-008.)
 
 ## Alternativas descartadas
 
@@ -42,4 +44,6 @@ quita código, símbolos de formato y rutas, y recorta a ocho frases.
   el siguiente punto. Se acepta en el MVP.
 - Lo que se lee es texto producido por un agente: se trata como dato, nunca como instrucción para la
   app.
-- Se agregan un permiso de enfoque de audio y una dependencia que actualiza el lockfile de `mobile/`.
+- No se agrega ningún permiso: la voz de salida no necesita uno, y el dictado ya usa `RECORD_AUDIO`
+  y `MODIFY_AUDIO_SETTINGS`, que están en `mobile/app.json` desde el upstream.
+- Se agrega una dependencia que actualiza el lockfile de `mobile/`.

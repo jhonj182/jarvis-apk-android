@@ -56,7 +56,18 @@ app se queda cerrada y lo explica: falla cerrada.
   desplegar los ajustes rápidos y volver, todo pide la huella o el rostro.
 - Los hijos del candado se mantienen montados para no perder la navegación, así que el regreso es
   inmediato tras autenticar. Mientras están tapados se ocultan también de los lectores de pantalla.
+- Por lo mismo, el motor de conversación sigue corriendo detrás de la tapa. Para que bloqueado
+  signifique también callado, el candado publica su estado (`use-lock-state.ts`) y Jarvis solo lee
+  en voz alta con la app desbloqueada: al bloquear corta la lectura, y el saludo y las respuestas
+  que lleguen bloqueadas no se leen.
+- En Android no existe el estado `inactive`: React Native avisa `background` en cuanto la app se
+  pausa. Un diálogo del sistema (el permiso del micrófono, la primera vez) bloquea la app y cuesta
+  una biometría al volver. Se acepta a cambio de que ninguna salida deje el candado abierto.
+- La tapa es un `Modal` nativo. Los paneles desplegables de Orca Lab son ventanas nativas propias y
+  una vista común no puede cubrirlos: sin esto, un panel abierto quedaba visible y tocable sobre la
+  pantalla de bloqueo.
 - No está resuelto en el MVP: la vista previa de "apps recientes" puede mostrar lo último que se vio
   antes de bloquear. Bloquearla exige una línea de código nativo y es decisión abierta en el PRD.
-- El token de emparejamiento no sobrevive un reinicio del teléfono hasta el primer desbloqueo; es
-  comportamiento heredado y deseable.
+- Tras reiniciar el teléfono, hasta el primer desbloqueo la app no puede leer el token de
+  emparejamiento y no conecta con el escritorio. Es comportamiento heredado del sistema operativo y
+  no obliga a emparejar de nuevo.
