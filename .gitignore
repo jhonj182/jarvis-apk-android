@@ -175,20 +175,17 @@ tests/e2e/.cross-version-checkouts/
 # graft's local graph cache — regenerable, not committed (run `graft build`).
 /graft/
 
-# Jarvis fork: foundational docs tracked on purpose (see AGENT.md).
+# Jarvis fork: docs tracked on purpose (see GOBERNANZA.md).
 !docs/01-prd.md
 !docs/02-arquitectura.md
 !docs/03-decisiones/
 !docs/03-decisiones/**
-!docs/04-estrategia-pruebas.md
-!docs/05-modelado-amenazas.md
-!docs/06-codificacion-segura.md
-!docs/HARNESS.md
 !docs/agentes/
 !docs/agentes/**
 !docs/personaje/
 !docs/personaje/**
-!docs/seguridad/
-!docs/seguridad/**
-!docs/sistemas/
-!docs/sistemas/**
+!docs/instalacion-y-prueba.md
+
+# Skills SDD del ciclo, versionadas a propósito en el fork (ver GOBERNANZA.md).
+!/.claude/skills/
+!/.claude/skills/**
