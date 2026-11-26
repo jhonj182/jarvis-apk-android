@@ -17,7 +17,15 @@ export interface JarvisMessage {
 }
 
 /** What the owner must do before talking, if anything. `null` means ready. */
-export type JarvisSetupNeed = 'pair-desktop' | 'choose-workspace' | null
+export type JarvisSetupNeed = 'pair-desktop' | 'choose-workspace' | 'dictation-off' | null
+
+/**
+ * Resolves an order on the phone, without the agent. Returns the sentence to
+ * speak aloud when it handled the text, or null to send the text to the agent.
+ */
+export interface JarvisLocalIntentHandler {
+  handle: (text: string) => Promise<string | null>
+}
 
 export interface JarvisConversation {
   activity: JarvisActivity
